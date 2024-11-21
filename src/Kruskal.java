@@ -1,94 +1,76 @@
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-class Kruskal {
+public class Kruskal {
     private Graph graph;
-    private Map<String, String> parent;
-    private Map<String, Integer> rank;
+    private int dayCounter = 1;
+    private int totalDays = 0;
+    private int totalKms = 0;
+    private final Set<String> alreadyVisitedNodes = new HashSet<>();
 
     public Kruskal(Graph graph) {
         this.graph = graph;
-        this.parent = new HashMap<>();
-        this.rank = new HashMap<>();
-        for (String node : graph.getEdges().stream().flatMap(e -> Stream.of(e.getFrom().getName(), e.getTo().getName())).collect(Collectors.toSet())) {
-            parent.put(node, node);
-            rank.put(node, 0);
-        }
     }
 
-    private String find(String node) {
-        if (!parent.get(node).equals(node)) {
-            parent.put(node, find(parent.get(node)));
-        }
-        return parent.get(node);
-    }
-
-    private void union(String node1, String node2) {
-        String root1 = find(node1);
-        String root2 = find(node2);
-
-        if (!root1.equals(root2)) {
-            if (rank.get(root1) > rank.get(root2)) {
-                parent.put(root2, root1);
-            } else if (rank.get(root1) < rank.get(root2)) {
-                parent.put(root1, root2);
-            } else {
-                parent.put(root2, root1);
-                rank.put(root1, rank.get(root1) + 1);
-            }
-        }
-    }
-
-    public void findMST() {
-        List<Edge> edges = graph.getEdges();
-        edges.sort(Comparator.comparingInt(Edge::getCost));
-
+    public void performKruskalMST() {
         List<Edge> mst = new ArrayList<>();
-        int totalCost = 0;
-        int totalDays = 0;
-        int hoursWorked = 0;
-        int kmBuilt = 0;
+        List<Edge> edges = new ArrayList<>(graph.getEdges());
+        edges.sort(Comparator.comparingInt(Edge::getCost));
+        UnionFind unionFind = new UnionFind();
+
+        for (Node node : graph.getNodes()) {
+            unionFind.createNewSet(node);
+        }
 
         for (Edge edge : edges) {
-            String from = edge.getFrom().getName();
-            String to = edge.getTo().getName();
-            int cost = edge.getCost();
+            Node rootFrom = unionFind.findRootNode(edge.getFrom());
+            Node rootTo = unionFind.findRootNode(edge.getTo());
 
-            if (!find(from).equals(find(to))) {
-                union(from, to);
+            if (!rootFrom.equals(rootTo)) {
                 mst.add(edge);
-                totalCost += cost;
+                unionFind.mergeNodeSets(edge.getFrom(), edge.getTo());
+            }
+        }
 
-                // Add an extra hour for connecting non-adjacent cities
-                if (!find(from).equals(find(to))) {
-                    cost += 1;
-                }
+        for (Edge edge : mst) {
+            int dailyHours = 8;
+            int travelTime = 0;
 
-                while (cost > 0) {
-                    int workHours = Math.min(cost, 8);
-                    cost -= workHours;
-                    hoursWorked += workHours;
-                    kmBuilt += workHours;
+            if (!alreadyVisitedNodes.contains(edge.getFrom().getName()) && !alreadyVisitedNodes.contains(edge.getTo().getName())) {
+                travelTime = 1;
+            }
 
-                    if (hoursWorked == 8) {
-                        totalDays++;
-                        System.out.println("[Day " + totalDays + "] " + from + " -> " + to + ": " + hoursWorked + " hours, " + kmBuilt + " km");
-                        hoursWorked = 0;
-                        kmBuilt = 0;
+            int remainingWork = edge.getCost();
+            int totalWorkedTime = remainingWork + travelTime;
+
+            while (totalWorkedTime > 0) {
+                int hoursWorked = Math.min(totalWorkedTime, dailyHours);
+                totalWorkedTime -= hoursWorked;
+
+                int doneKms = Math.min(remainingWork, hoursWorked);
+
+                if (travelTime > 0) {
+                    travelTime = 0;
+                    if (remainingWork > 8) {
+                        doneKms -= 1;
                     }
                 }
 
-                if (hoursWorked > 0) {
-                    totalDays++;
-                    System.out.println("[Day " + totalDays + "] " + from + " -> " + to + ": " + hoursWorked + " hours, " + kmBuilt + " km");
-                    hoursWorked = 0;
-                    kmBuilt = 0;
-                }
+                totalKms += doneKms;
+                remainingWork -= doneKms;
+
+                System.out.println("[Day " + dayCounter + "] " + edge.getFrom().getName() + " -> "
+                        + edge.getTo().getName() + ": " + hoursWorked + " hours, " + doneKms + " km");
+
+                dayCounter++;
+                totalDays++;
             }
+            alreadyVisitedNodes.add(edge.getFrom().getName());
+            alreadyVisitedNodes.add(edge.getTo().getName());
         }
-        System.out.println("Result of Kruskal’s algorithm: " + totalDays + " days, " + totalCost + " km");
+
         System.out.println("-------------------------------------");
+        System.out.println("Result of Kruskal’s algorithm: " + totalDays + " days, " + totalKms + " km");
+        System.out.println("");
         System.out.println("");
     }
 }

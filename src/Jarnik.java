@@ -1,80 +1,91 @@
 import java.util.*;
 
-class Jarnik {
+public class Jarnik {
     private Graph graph;
+    private int dayCounter = 1;
+    private int totalDays = 0;
+    private int totalKms = 0;
+    private final Set<String> alreadyVisitedNodes = new HashSet<>();
 
     public Jarnik(Graph graph) {
         this.graph = graph;
     }
 
-    public void findMST() {
-        Set<String> visited = new HashSet<>();
-        PriorityQueue<Edge> pq = new PriorityQueue<>(Comparator.comparingInt(Edge::getCost));
+    public void performJarnikMST() {
         List<Edge> mst = new ArrayList<>();
-        int totalCost = 0;
-        int totalDays = 0;
-        int hoursWorked = 0;
-        int kmBuilt = 0;
+        PriorityQueue<Edge> pq = new PriorityQueue<>(Comparator.comparingInt(Edge::getCost));
+        Set<Node> alreadyVisitedNodes = new HashSet<>();
 
-        String startNode = graph.getNodes().iterator().next().getName();
-        visited.add(startNode);
-        pq.addAll(getEdges(startNode));
+        Node startNode = graph.getNodes().iterator().next();
+        alreadyVisitedNodes.add(startNode);
 
-        while (!pq.isEmpty()) {
+        for (Edge edge : graph.getEdges()) {
+            if (edge.getFrom().equals(startNode) || edge.getTo().equals(startNode)) {
+                pq.add(edge);
+            }
+        }
+
+        while (!pq.isEmpty() && mst.size() < graph.getNodes().size() - 1) {
             Edge edge = pq.poll();
-            String from = edge.getFrom().getName();
-            String to = edge.getTo().getName();
-            int cost = edge.getCost();
 
-            if (visited.contains(from) && visited.contains(to)) {
-                continue;
-            }
+            Node from = edge.getFrom();
+            Node to = edge.getTo();
 
-            mst.add(edge);
-            totalCost += cost;
+            if (!alreadyVisitedNodes.contains(from) || !alreadyVisitedNodes.contains(to)) {
+                mst.add(edge);
 
-            // Add an extra hour for connecting non-adjacent cities
-            if (!visited.contains(from) && !visited.contains(to)) {
-                cost += 1;
-            }
+                Node nextNode = alreadyVisitedNodes.contains(from) ? to : from;
+                alreadyVisitedNodes.add(nextNode);
 
-            while (cost > 0) {
-                int workHours = Math.min(cost, 8);
-                cost -= workHours;
-                hoursWorked += workHours;
-                kmBuilt += workHours;
-
-                if (hoursWorked == 8) {
-                    totalDays++;
-                    System.out.println("[Day " + totalDays + "] " + from + " -> " + to + ": " + hoursWorked + " hours, " + kmBuilt + " km");
-                    hoursWorked = 0;
-                    kmBuilt = 0;
+                for (Edge neighborEdge : graph.getEdges()) {
+                    if ((neighborEdge.getFrom().equals(nextNode) && !alreadyVisitedNodes.contains(neighborEdge.getTo())) ||
+                            (neighborEdge.getTo().equals(nextNode) && !alreadyVisitedNodes.contains(neighborEdge.getFrom()))) {
+                        pq.add(neighborEdge);
+                    }
                 }
             }
+        }
 
-            if (hoursWorked > 0) {
+        for (Edge edge : mst) {
+            int dailyHours = 8;
+            int travelTime = 0;
+
+            if (!this.alreadyVisitedNodes.contains(edge.getFrom().getName()) && !this.alreadyVisitedNodes.contains(edge.getTo().getName())) {
+                travelTime = 1;
+            }
+
+            int remainingWork = edge.getCost();
+            int totalWorkedTime = remainingWork + travelTime;
+
+            while (totalWorkedTime > 0) {
+                int hoursWorked = Math.min(totalWorkedTime, dailyHours);
+                totalWorkedTime -= hoursWorked;
+
+                int doneKms = Math.min(remainingWork, hoursWorked);
+
+                if (travelTime > 0) {
+                    travelTime = 0;
+                    if (remainingWork > 8) {
+                        doneKms -= 1;
+                    }
+                }
+
+                totalKms += doneKms;
+                remainingWork -= doneKms;
+
+                System.out.println("[Day " + dayCounter + "] " + edge.getFrom().getName() + " -> "
+                        + edge.getTo().getName() + ": " + hoursWorked + " hours, " + doneKms + " km");
+
+                dayCounter++;
                 totalDays++;
-                System.out.println("[Day " + totalDays + "] " + from + " -> " + to + ": " + hoursWorked + " hours, " + kmBuilt + " km");
-                hoursWorked = 0;
-                kmBuilt = 0;
             }
-
-            String nextNode = visited.contains(from) ? to : from;
-            visited.add(nextNode);
-            pq.addAll(getEdges(nextNode));
+            this.alreadyVisitedNodes.add(edge.getFrom().getName());
+            this.alreadyVisitedNodes.add(edge.getTo().getName());
         }
-        System.out.println("Result of Jarnik’s algorithm: " + totalDays + " days, " + totalCost + " km");
+
         System.out.println("-------------------------------------");
+        System.out.println("Result of Jarnik’s algorithm: " + totalDays + " days, " + totalKms + " km");
         System.out.println("");
-    }
-
-    private List<Edge> getEdges(String node) {
-        List<Edge> edges = new ArrayList<>();
-        for (Edge edge : graph.getEdges()) {
-            if (edge.getFrom().getName().equals(node) || edge.getTo().getName().equals(node)) {
-                edges.add(edge);
-            }
-        }
-        return edges;
+        System.out.println("");
     }
 }

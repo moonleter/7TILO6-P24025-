@@ -1,5 +1,6 @@
 public class Main {
     public static void main(String[] args) {
+        // TODO: add comaprision between the algoirthms at the end
         Graph graph = new Graph();
 
         Node lordaeron = new Node("Lordaeron");
@@ -52,12 +53,12 @@ public class Main {
         graph.addEdge(arraken, ankhMorpork, 24);
 
         Boruvka boruvka = new Boruvka(graph);
-        boruvka.findMST();
+        boruvka.performBoruvkaMST();
 
         Jarnik jarnik = new Jarnik(graph);
-        jarnik.findMST();
-        
+        jarnik.performJarnikMST();
+
         Kruskal kruskal = new Kruskal(graph);
-        kruskal.findMST();
+        kruskal.performKruskalMST();
     }
 }
