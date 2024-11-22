@@ -73,4 +73,12 @@ public class Kruskal {
         System.out.println("");
         System.out.println("");
     }
+
+    public int getTotalDays() {
+        return totalDays;
+    }
+
+    public int getTotalKms() {
+        return totalKms;
+    }
 }

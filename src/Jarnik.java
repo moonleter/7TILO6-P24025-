@@ -16,7 +16,7 @@ public class Jarnik {
         PriorityQueue<Edge> pq = new PriorityQueue<>(Comparator.comparingInt(Edge::getCost));
         Set<Node> alreadyVisitedNodes = new HashSet<>();
 
-        Node startNode = graph.getNodes().iterator().next();
+        Node startNode = graph.getNodes().getFirst();
         alreadyVisitedNodes.add(startNode);
 
         for (Edge edge : graph.getEdges()) {
@@ -27,6 +27,10 @@ public class Jarnik {
 
         while (!pq.isEmpty() && mst.size() < graph.getNodes().size() - 1) {
             Edge edge = pq.poll();
+
+            if (edge.getFrom() == null) {
+                throw new RuntimeException("Edge from is null");
+            }
 
             Node from = edge.getFrom();
             Node to = edge.getTo();
@@ -87,5 +91,13 @@ public class Jarnik {
         System.out.println("Result of Jarnik’s algorithm: " + totalDays + " days, " + totalKms + " km");
         System.out.println("");
         System.out.println("");
+    }
+
+    public int getTotalDays() {
+        return totalDays;
+    }
+
+    public int getTotalKms() {
+        return totalKms;
     }
 }

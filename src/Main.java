@@ -60,5 +60,13 @@ public class Main {
 
         Kruskal kruskal = new Kruskal(graph);
         kruskal.performKruskalMST();
+
+        ResultComparision resultComparision = new ResultComparision();
+        resultComparision.setBoruvkaResult(boruvka.getTotalDays(), boruvka.getTotalKms());
+        resultComparision.setJarnikResult(jarnik.getTotalDays(), jarnik.getTotalKms());
+        resultComparision.setKruskalResult(kruskal.getTotalDays(), kruskal.getTotalKms());
+
+
+        resultComparision.printComparisionResults();
     }
 }
