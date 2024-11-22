@@ -1,6 +1,5 @@
 public class Main {
     public static void main(String[] args) {
-        // TODO: add comaprision between the algoirthms at the end
         Graph graph = new Graph();
 
         Node lordaeron = new Node("Lordaeron");
